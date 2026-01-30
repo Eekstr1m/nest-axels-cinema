@@ -1,4 +1,11 @@
-import { Controller, NotFoundException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Post,
+} from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 
@@ -7,7 +14,9 @@ export class BookingController {
   constructor(private bookingService: BookingService) {}
 
   // POST /booking
-  async create(bookingData: CreateBookingDto) {
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() bookingData: CreateBookingDto) {
     try {
       return await this.bookingService.create(bookingData);
     } catch (error) {

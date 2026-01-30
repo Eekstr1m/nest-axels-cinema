@@ -1,5 +1,7 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { SessionsService } from './sessions.service';
+import { ParseObjectIdPipe } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
 
 @Controller('sessions')
 export class SessionsController {
@@ -7,7 +9,9 @@ export class SessionsController {
 
   // GET /sessions/movie/:movieId
   @Get('movie/:movieId')
-  async findByMovieId(@Param('movieId') movieId: string) {
+  async findByMovieId(
+    @Param('movieId', ParseObjectIdPipe) movieId: mongoose.Types.ObjectId,
+  ) {
     try {
       return await this.sessionsService.findByMovieId(movieId);
     } catch (error) {
@@ -20,7 +24,7 @@ export class SessionsController {
   // GET /sessions/movie/:movieId/date/:date
   @Get('movie/:movieId/date/:date')
   async findSessionsByDateForMovie(
-    @Param('movieId') movieId: string,
+    @Param('movieId', ParseObjectIdPipe) movieId: mongoose.Types.ObjectId,
     @Param('date') date: string,
   ) {
     try {
@@ -37,7 +41,9 @@ export class SessionsController {
 
   // GET /sessions/movie/:movieId/dates
   @Get('movie/:movieId/dates')
-  async findSessionsDatesForMovie(@Param('movieId') movieId: string) {
+  async findSessionsDatesForMovie(
+    @Param('movieId', ParseObjectIdPipe) movieId: mongoose.Types.ObjectId,
+  ) {
     try {
       return await this.sessionsService.findSessionsDatesForMovie(movieId);
     } catch (error) {
@@ -47,9 +53,23 @@ export class SessionsController {
     }
   }
 
+  // GET /sessions/generate
+  @Get('generate')
+  async generateSessions() {
+    try {
+      return await this.sessionsService.generateSessions();
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Sessions not generated',
+      );
+    }
+  }
+
   // GET /sessions/:sessionId
   @Get(':sessionId')
-  async findSessionById(@Param('sessionId') sessionId: string) {
+  async findSessionById(
+    @Param('sessionId', ParseObjectIdPipe) sessionId: mongoose.Types.ObjectId,
+  ) {
     try {
       return await this.sessionsService.findSessionById(sessionId);
     } catch (error) {

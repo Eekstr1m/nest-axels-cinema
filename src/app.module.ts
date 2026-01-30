@@ -2,11 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MoviesModule } from './movies/movies.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { SessionsService } from './sessions/sessions.service';
-import { SessionsController } from './sessions/sessions.controller';
 import { SessionsModule } from './sessions/sessions.module';
-import { BookingController } from './booking/booking.controller';
-import { BookingService } from './booking/booking.service';
 import { BookingModule } from './booking/booking.module';
 
 @Module({
@@ -17,7 +13,7 @@ import { BookingModule } from './booking/booking.module';
     SessionsModule,
     BookingModule,
   ],
-  controllers: [SessionsController, BookingController],
-  providers: [SessionsService, BookingService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

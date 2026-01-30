@@ -22,7 +22,7 @@ export const SeatSchema = SchemaFactory.createForClass(Seat);
 @Schema()
 export class Sessions {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Movie', required: true })
-  movieId: string;
+  movieId: mongoose.Types.ObjectId;
 
   @Prop({ required: true })
   date: string;
