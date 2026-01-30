@@ -21,6 +21,18 @@ export class SessionsController {
     }
   }
 
+  // GET /sessions/sql/movie/:movieId
+  @Get('sql/movie/:movieId')
+  async findByMovieIdSql(@Param('movieId') movieId: number) {
+    try {
+      return await this.sessionsService.findByMovieIdSql(movieId);
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Sessions not found',
+      );
+    }
+  }
+
   // GET /sessions/movie/:movieId/date/:date
   @Get('movie/:movieId/date/:date')
   async findSessionsByDateForMovie(
@@ -29,6 +41,24 @@ export class SessionsController {
   ) {
     try {
       return await this.sessionsService.findSessionsByDateForMovie(
+        movieId,
+        date,
+      );
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Sessions not found',
+      );
+    }
+  }
+
+  // GET /sessions/sql/movie/:movieId/date/:date
+  @Get('sql/movie/:movieId/date/:date')
+  async findSessionsByDateForMovieSql(
+    @Param('movieId') movieId: number,
+    @Param('date') date: string,
+  ) {
+    try {
+      return await this.sessionsService.findSessionsByDateForMovieSql(
         movieId,
         date,
       );
@@ -53,6 +83,30 @@ export class SessionsController {
     }
   }
 
+  // GET /sessions/sql/movie/:movieId/dates
+  @Get('sql/movie/:movieId/dates')
+  async findSessionsDatesForMovieSql(@Param('movieId') movieId: number) {
+    try {
+      return await this.sessionsService.findSessionsDatesForMovieSql(movieId);
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Sessions dates not found',
+      );
+    }
+  }
+
+  // GET /sessions/sql/generate
+  @Get('sql/generate')
+  async generateSessionsSql() {
+    try {
+      return await this.sessionsService.generateSessionsSql();
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Sessions not generated',
+      );
+    }
+  }
+
   // GET /sessions/generate
   @Get('generate')
   async generateSessions() {
@@ -72,6 +126,18 @@ export class SessionsController {
   ) {
     try {
       return await this.sessionsService.findSessionById(sessionId);
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Session not found',
+      );
+    }
+  }
+
+  // GET /sessions/sql/:sessionId
+  @Get('sql/:sessionId')
+  async findSessionByIdSql(@Param('sessionId') sessionId: number) {
+    try {
+      return await this.sessionsService.findSessionByIdSql(sessionId);
     } catch (error) {
       throw new NotFoundException(
         error instanceof Error ? error.message : 'Session not found',

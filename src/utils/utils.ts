@@ -1,4 +1,4 @@
-import { Seat } from 'src/sessions/sessions.schema';
+import { Seat } from 'src/sessions/schema/sessions.schema';
 
 export const generateSessionTimes = () => {
   const times: string[] = [];

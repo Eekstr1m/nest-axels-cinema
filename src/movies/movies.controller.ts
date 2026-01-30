@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   Post,
@@ -17,9 +19,33 @@ export class MoviesController {
 
   // GET /movies
   @Get()
-  findAll() {
+  async findAll() {
     try {
-      return this.movieService.findAll();
+      return await this.movieService.findAll();
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Movies not found',
+      );
+    }
+  }
+
+  // GET /movies/sql
+  @Get('sql')
+  async findAllSql() {
+    try {
+      return await this.movieService.findAllSql();
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Movies not found',
+      );
+    }
+  }
+
+  // GET /movies/sql/:id
+  @Get('sql/:id')
+  async findOneSql(@Param('id') id: number) {
+    try {
+      return await this.movieService.findOneSql(id);
     } catch (error) {
       throw new NotFoundException(
         error instanceof Error ? error.message : 'Movies not found',
@@ -41,9 +67,23 @@ export class MoviesController {
 
   // POST /movies
   @Post()
-  create(@Body() movie: CreateMovieDto) {
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() movie: CreateMovieDto) {
     try {
-      return this.movieService.create(movie);
+      return await this.movieService.create(movie);
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'Error creating movie',
+      );
+    }
+  }
+
+  // POST /movies/sql
+  @Post('sql')
+  @HttpCode(HttpStatus.CREATED)
+  async createSql(@Body() movie: CreateMovieDto) {
+    try {
+      return await this.movieService.createSql(movie);
     } catch (error) {
       throw new NotFoundException(
         error instanceof Error ? error.message : 'Error creating movie',
