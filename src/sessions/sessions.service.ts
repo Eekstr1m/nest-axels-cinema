@@ -195,6 +195,10 @@ export class SessionsService {
     const movies = await this.movieModel.find();
     const sessions: Partial<Sessions>[] = [];
 
+    if (!movies || movies.length === 0) {
+      throw new Error('No movies found in database');
+    }
+
     const today = new Date();
     const sessionTimes = generateSessionTimes();
 
