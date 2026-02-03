@@ -36,10 +36,6 @@ export class BookingController {
   @HttpCode(HttpStatus.CREATED)
   async createSql(@Body() bookingData: CreateBookingSqlDto) {
     try {
-      console.log(
-        'Received booking data:',
-        JSON.stringify(bookingData, null, 2),
-      );
       return await this.bookingService.createSql(bookingData);
     } catch (error) {
       console.error('SQL Booking creation error:', error);

@@ -23,8 +23,8 @@ export class Booking {
   @Prop({ required: true })
   date: string;
 
-  @Prop({ type: [[SeatSchema]], required: true })
-  bookedSeats: Seat[][];
+  @Prop({ type: [SeatSchema], required: true })
+  bookedSeats: Seat[];
 
   @Prop({ required: true })
   time: string;

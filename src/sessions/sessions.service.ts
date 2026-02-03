@@ -203,6 +203,8 @@ export class SessionsService {
     const sessionTimes = generateSessionTimes();
 
     const PRICE = 10;
+    const ROWS = 10;
+    const SEATS_PER_ROW = 10;
 
     for (const movie of movies) {
       for (let i = 0; i < 7; i++) {
@@ -215,7 +217,7 @@ export class SessionsService {
             movieId: movie._id,
             date: formatDate,
             startTime: time,
-            seats: generateSeats(),
+            seats: generateSeats(ROWS, SEATS_PER_ROW),
             price: PRICE,
           });
         }
@@ -223,7 +225,11 @@ export class SessionsService {
     }
 
     await this.sessionsModel.insertMany(sessions);
-    return { message: 'Sessions generated successfully', sessions };
+    return {
+      message: 'Sessions generated successfully',
+      sessionsCreated: sessions.length,
+      seatsCreated: sessions.length * ROWS * SEATS_PER_ROW,
+    };
   }
 
   async generateSessionsSql() {
@@ -241,6 +247,8 @@ export class SessionsService {
       const today = new Date();
       const sessionTimes = generateSessionTimes();
       const PRICE = 10;
+      const ROWS = 10;
+      const SEATS_PER_ROW = 10;
 
       let totalSessionsCreated = 0;
       let totalSeatsCreated = 0;
@@ -262,7 +270,7 @@ export class SessionsService {
             const savedSession = await queryRunner.manager.save(session);
             totalSessionsCreated++;
 
-            const seatRows = generateSeats();
+            const seatRows = generateSeats(ROWS, SEATS_PER_ROW);
             const seatsToInsert: Seat[] = [];
 
             for (const row of seatRows) {
@@ -294,8 +302,7 @@ export class SessionsService {
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      console.error('Error generating sessions:', error);
-      throw new Error('Error generating sessions');
+      throw error;
     } finally {
       await queryRunner.release();
     }

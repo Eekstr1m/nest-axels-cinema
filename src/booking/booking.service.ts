@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Bookings } from './entity/bookings.entity';
 import { BookingSeat } from './entity/bookings-seat.entity';
 import { Seat } from 'src/sessions/entity/seat.entity';
+import { Session } from 'src/sessions/entity/session.entity';
 import { DataSource, Repository } from 'typeorm';
 import { Sessions } from 'src/sessions/schema/sessions.schema';
 
@@ -23,6 +24,7 @@ export class BookingService {
     @InjectRepository(BookingSeat)
     private bookingSeatRepository: Repository<BookingSeat>,
     @InjectRepository(Seat) private seatRepository: Repository<Seat>,
+    @InjectRepository(Session) private sessionsRepository: Repository<Session>,
     private dataSource: DataSource,
   ) {}
 
@@ -34,35 +36,45 @@ export class BookingService {
       throw new Error('Session not found');
     }
 
+    if (!session.movieId.equals(bookingData.movieId)) {
+      throw new Error('Session movie does not match booking movie');
+    }
+
+    if (session.date !== bookingData.date) {
+      throw new Error('Session date does not match booking date');
+    }
+
+    if (session.startTime !== bookingData.time) {
+      throw new Error('Session time does not match booking time');
+    }
+
     // Mark seats as booked in the session
-    for (const rowSeats of bookingData.bookedSeats) {
-      for (const bookedSeat of rowSeats) {
-        let seatFound = false;
+    for (const bookedSeat of bookingData.bookedSeats) {
+      let seatFound = false;
 
-        for (const row of session.seats) {
-          for (const seat of row) {
-            if (
-              seat.row === bookedSeat.row &&
-              seat.number === bookedSeat.number
-            ) {
-              if (seat.isBooked) {
-                throw new Error(
-                  `Seat row ${seat.row}, number ${seat.number} is already booked`,
-                );
-              }
-              seat.isBooked = true;
-              seatFound = true;
-              break;
+      for (const row of session.seats) {
+        for (const seat of row) {
+          if (
+            seat.row === bookedSeat.row &&
+            seat.number === bookedSeat.number
+          ) {
+            if (seat.isBooked) {
+              throw new Error(
+                `Seat row ${seat.row}, number ${seat.number} is already booked`,
+              );
             }
+            seat.isBooked = true;
+            seatFound = true;
+            break;
           }
-          if (seatFound) break;
         }
+        if (seatFound) break;
+      }
 
-        if (!seatFound) {
-          throw new Error(
-            `Seat row ${bookedSeat.row}, number ${bookedSeat.number} not found`,
-          );
-        }
+      if (!seatFound) {
+        throw new Error(
+          `Seat row ${bookedSeat.row}, number ${bookedSeat.number} not found`,
+        );
       }
     }
 
@@ -82,6 +94,28 @@ export class BookingService {
     await queryRunner.startTransaction();
 
     try {
+      const session = await this.sessionsRepository.findOne({
+        where: { _id: bookingData.sessionId },
+        select: ['_id', 'date', 'startTime'],
+        relations: ['movie'],
+      });
+
+      if (!session) {
+        throw new Error('Session not found');
+      }
+
+      if (session.movie._id !== bookingData.movieId) {
+        throw new Error('Session movie does not match booking movie');
+      }
+
+      if (session.date !== bookingData.date) {
+        throw new Error('Session date does not match booking date');
+      }
+
+      if (session.startTime !== bookingData.time) {
+        throw new Error('Session time does not match booking time');
+      }
+
       // Create booking
       const newBooking = this.bookingRepository.create({
         session: { _id: bookingData.sessionId },
@@ -94,7 +128,6 @@ export class BookingService {
         email: bookingData.email,
         phone: bookingData.phone,
       });
-
       const savedBooking = await queryRunner.manager.save(newBooking);
 
       // Find and book seats
@@ -136,7 +169,6 @@ export class BookingService {
       return savedBooking;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      console.error('Error creating booking:', error);
       throw error;
     } finally {
       await queryRunner.release();

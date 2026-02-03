@@ -24,17 +24,20 @@ class SeatDto {
 
 export class CreateBookingDto {
   @IsMongoId()
+  @IsNotEmpty()
   sessionId: mongoose.Types.ObjectId;
 
   @IsMongoId()
+  @IsNotEmpty()
   movieId: mongoose.Types.ObjectId;
 
   @IsDateString()
+  @IsNotEmpty()
   date: string;
 
   @IsArray()
   @IsNotEmpty()
-  bookedSeats: SeatDocument[][];
+  bookedSeats: SeatDocument[];
 
   @IsString()
   @IsNotEmpty()
@@ -42,10 +45,12 @@ export class CreateBookingDto {
 
   @IsNumber()
   @IsPositive()
+  @IsNotEmpty()
   pricePerSeat: number;
 
   @IsNumber()
   @IsPositive()
+  @IsNotEmpty()
   totalPrice: number;
 
   @IsString()
@@ -53,6 +58,7 @@ export class CreateBookingDto {
   fullName: string;
 
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
   @IsString()
@@ -70,9 +76,11 @@ export class CreateBookingSqlDto {
   movieId: number;
 
   @IsDateString()
+  @IsNotEmpty()
   date: string;
 
   @IsArray()
+  @IsNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => SeatDto)
   bookedSeats: SeatDto[];
@@ -87,6 +95,7 @@ export class CreateBookingSqlDto {
 
   @IsNumber()
   @IsPositive()
+  @IsNotEmpty()
   totalPrice: number;
 
   @IsString()
@@ -94,6 +103,7 @@ export class CreateBookingSqlDto {
   fullName: string;
 
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
   @IsString()

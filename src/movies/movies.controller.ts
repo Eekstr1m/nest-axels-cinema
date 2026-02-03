@@ -65,12 +65,12 @@ export class MoviesController {
     }
   }
 
-  // POST /movies
-  @Post()
+  // POST /movies/sql
+  @Post('sql')
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() movie: CreateMovieDto) {
+  async createSql(@Body() movie: CreateMovieDto) {
     try {
-      return await this.movieService.create(movie);
+      return await this.movieService.createSql(movie);
     } catch (error) {
       throw new NotFoundException(
         error instanceof Error ? error.message : 'Error creating movie',
@@ -78,12 +78,12 @@ export class MoviesController {
     }
   }
 
-  // POST /movies/sql
-  @Post('sql')
+  // POST /movies
+  @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createSql(@Body() movie: CreateMovieDto) {
+  async create(@Body() movie: CreateMovieDto) {
     try {
-      return await this.movieService.createSql(movie);
+      return await this.movieService.create(movie);
     } catch (error) {
       throw new NotFoundException(
         error instanceof Error ? error.message : 'Error creating movie',
