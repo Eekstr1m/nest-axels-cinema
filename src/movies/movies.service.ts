@@ -59,6 +59,12 @@ export class MoviesService {
       throw new Error('Invalid movie data');
     }
 
+    const findExisting = await this.movieModel.findOne({ title: movie.title });
+
+    if (findExisting) {
+      throw new Error('Movie with this title already exists');
+    }
+
     const newMovie = new this.movieModel(movie);
 
     await newMovie.save();
@@ -68,6 +74,14 @@ export class MoviesService {
   async createSql(movie: CreateMovieDto) {
     if (!movie) {
       throw new Error('Invalid movie data');
+    }
+
+    const findExisting = await this.moviesRepository.findOneBy({
+      title: movie.title,
+    });
+
+    if (findExisting) {
+      throw new Error('Movie with this title already exists');
     }
 
     const newMovie = this.moviesRepository.create(movie);

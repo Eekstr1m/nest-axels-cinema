@@ -10,10 +10,12 @@ import { Session } from './sessions/entity/session.entity';
 import { Bookings } from './booking/entity/bookings.entity';
 import { Seat } from './sessions/entity/seat.entity';
 import { BookingSeat } from './booking/entity/bookings-seat.entity';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ envFilePath: '.env' }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     MongooseModule.forRoot(process.env.MONGO_URI || ''),
     TypeOrmModule.forRoot({
       type: 'mysql',
@@ -28,6 +30,8 @@ import { BookingSeat } from './booking/entity/bookings-seat.entity';
     MoviesModule,
     SessionsModule,
     BookingModule,
+    AuthModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],
