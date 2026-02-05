@@ -5,6 +5,8 @@ import { compare } from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 import { refreshJwtSignOptions } from './config/refresh-jwt.options';
 import { AuthJwtPayload } from './types/auth-jwt';
+import { Role } from './enums/role.enum';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class AuthService {
@@ -14,42 +16,84 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ id: string; accessToken: string; refreshToken: string }> {
+  async validateUser(email: string, password: string) {
     const user = await this.usersService.findOneByEmailWithPassword(email);
     if (!user) throw new UnauthorizedException();
 
     const isPasswordMatch = await compare(password, user.password);
     if (!isPasswordMatch) throw new UnauthorizedException();
 
-    const payload: AuthJwtPayload = {
-      sub: user._id.toString(),
-      role: user.role,
-    };
+    return { userId: user._id.toString(), role: user.role };
+  }
 
-    const accessToken = await this.jwtService.signAsync(payload);
-    const refreshToken = await this.jwtService.signAsync(
-      payload,
-      refreshJwtSignOptions(this.configService),
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ id: string; accessToken: string; refreshToken: string }> {
+    const { userId, role } = await this.validateUser(email, password);
+
+    const { accessToken, refreshToken } = await this.generateTokens(
+      userId,
+      role,
     );
 
-    return { id: user._id.toString(), accessToken, refreshToken };
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.usersService.updateHashedRefreshToken(
+      userId,
+      hashedRefreshToken,
+    );
+
+    return { id: userId, accessToken, refreshToken };
+  }
+
+  async generateTokens(userId: string, role: Role) {
+    const payload: AuthJwtPayload = {
+      sub: userId,
+      role,
+    };
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(
+        payload,
+        refreshJwtSignOptions(this.configService),
+      ),
+    ]);
+
+    return { accessToken, refreshToken };
   }
 
   async refreshToken(
     userId: string,
-  ): Promise<{ id: string; accessToken: string }> {
-    const user = await this.usersService.findOneById(userId);
-    if (!user) throw new UnauthorizedException();
+    role: Role,
+  ): Promise<{ id: string; accessToken: string; refreshToken: string }> {
+    const { accessToken, refreshToken } = await this.generateTokens(
+      userId,
+      role,
+    );
 
-    const payload: AuthJwtPayload = {
-      sub: user._id.toString(),
-      role: user.role,
-    };
-    const accessToken = await this.jwtService.signAsync(payload);
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.usersService.updateHashedRefreshToken(
+      userId,
+      hashedRefreshToken,
+    );
 
-    return { id: user._id.toString(), accessToken };
+    return { id: userId, accessToken, refreshToken };
+  }
+
+  async validateRefreshToken(userId: string, refreshToken: string) {
+    const user = await this.usersService.findOneByIdWithToken(userId);
+    if (!user || !user.hashedRefreshToken) throw new UnauthorizedException();
+
+    const isRefreshTokenMatching = await argon2.verify(
+      user.hashedRefreshToken,
+      refreshToken,
+    );
+    if (!isRefreshTokenMatching) throw new UnauthorizedException();
+
+    return { userId: user._id.toString(), role: user.role };
+  }
+
+  async logout(userId: string) {
+    await this.usersService.updateHashedRefreshToken(userId, '');
   }
 }

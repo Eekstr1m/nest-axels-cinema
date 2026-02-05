@@ -6,22 +6,22 @@ export type MovieDocument = HydratedDocument<Movie>;
 @Schema({ timestamps: true })
 export class Movie {
   @Prop({ required: true })
-  title: string;
+  title!: string;
 
   @Prop({ required: true })
-  description: string;
+  description!: string;
 
   @Prop({ required: true })
-  posterUrl: string;
+  posterUrl!: string;
 
   @Prop({ required: true })
-  duration: number;
+  duration!: number;
 
   @Prop({ required: true, type: [String] })
-  genres: string[];
+  genres!: string[];
 
   @Prop({ required: true })
-  releaseDate: Date;
+  releaseDate!: Date;
 }
 
 export const MoviesSchema = SchemaFactory.createForClass(Movie);

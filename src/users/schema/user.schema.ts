@@ -8,19 +8,22 @@ export type UserDocument = HydratedDocument<User>;
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, unique: true })
-  fullName: string;
+  fullName!: string;
 
   @Prop({ required: true, select: false })
-  password: string;
+  password!: string;
+
+  @Prop({ select: false })
+  hashedRefreshToken?: string;
 
   @Prop({ required: true, unique: true })
-  email: string;
+  email!: string;
 
   @Prop({ required: true })
-  phone: string;
+  phone!: string;
 
   @Prop({ type: String, enum: Role, default: Role.User })
-  role: Role;
+  role!: Role;
 }
 
 export const UsersSchema = SchemaFactory.createForClass(User);

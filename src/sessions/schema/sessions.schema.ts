@@ -7,13 +7,13 @@ export type SessionsDocument = HydratedDocument<Sessions>;
 @Schema({ _id: false })
 export class Seat {
   @Prop({ required: true })
-  row: number;
+  row!: number;
 
   @Prop({ required: true })
-  number: number;
+  number!: number;
 
   @Prop({ default: false })
-  isBooked: boolean;
+  isBooked!: boolean;
 }
 
 export const SeatSchema = SchemaFactory.createForClass(Seat);
@@ -22,19 +22,19 @@ export const SeatSchema = SchemaFactory.createForClass(Seat);
 @Schema()
 export class Sessions {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Movie', required: true })
-  movieId: mongoose.Types.ObjectId;
+  movieId!: mongoose.Types.ObjectId;
 
   @Prop({ required: true })
-  date: string;
+  date!: string;
 
   @Prop({ required: true })
-  startTime: string;
+  startTime!: string;
 
   @Prop({ type: [[SeatSchema]], required: true })
-  seats: Seat[][];
+  seats!: Seat[][];
 
   @Prop({ required: true })
-  price: number;
+  price!: number;
 }
 
 export const SessionsSchema = SchemaFactory.createForClass(Sessions);

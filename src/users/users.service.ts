@@ -18,6 +18,18 @@ export class UsersService {
     return user;
   }
 
+  async findOneByIdWithToken(id: string): Promise<UserDocument> {
+    const user = await this.userModel
+      .findById(id)
+      .select('+hashedRefreshToken');
+
+    if (!user) {
+      throw new Error(`User with id ${id} not found`);
+    }
+
+    return user;
+  }
+
   async findOneByEmail(email: string): Promise<UserDocument> {
     const user = await this.userModel.findOne({ email });
 
@@ -36,6 +48,12 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async updateHashedRefreshToken(userId: string, hashedRefreshToken: string) {
+    return await this.userModel.findByIdAndUpdate(userId, {
+      hashedRefreshToken,
+    });
   }
 
   async createUser(
