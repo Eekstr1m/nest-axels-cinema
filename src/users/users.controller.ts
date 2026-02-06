@@ -22,6 +22,13 @@ export class UsersController {
     return this.usersService.findOneById(user.userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('auth-user')
+  getUserInfoById(@Req() { user }: { user: ValidatedJwtUser }) {
+    return this.usersService.getUserInfoById(user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('create')
   async createUser(@Body() user: CreateUserDto) {
     try {

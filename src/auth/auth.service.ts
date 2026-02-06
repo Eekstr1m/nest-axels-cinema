@@ -7,6 +7,7 @@ import { refreshJwtSignOptions } from './config/refresh-jwt.options';
 import { AuthJwtPayload } from './types/auth-jwt';
 import { Role } from './enums/role.enum';
 import * as argon2 from 'argon2';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -44,6 +45,11 @@ export class AuthService {
     );
 
     return { id: userId, accessToken, refreshToken };
+  }
+
+  async register(registerDto: RegisterDto) {
+    const user = await this.usersService.createUser(registerDto);
+    return await this.login(user.email, registerDto.password);
   }
 
   async generateTokens(userId: string, role: Role) {

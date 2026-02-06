@@ -24,12 +24,15 @@ export class User {
 
   @Prop({ type: String, enum: Role, default: Role.User })
   role!: Role;
+
+  createdAt!: Date;
+  updatedAt!: Date;
 }
 
 export const UsersSchema = SchemaFactory.createForClass(User);
 
 UsersSchema.pre('save', async function () {
-  if (this.isModified('password')) {
+  if (this.isModified('password') && this.password) {
     this.password = await bcrypt.hash(this.password, 10);
   }
 });

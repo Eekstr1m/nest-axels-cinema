@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -15,6 +16,7 @@ import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard';
 import { ValidatedJwtUser } from './types/auth-jwt';
 import { ConfigService } from '@nestjs/config';
 import { type Response } from 'express';
+import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -47,13 +49,37 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { id, accessToken, refreshToken } = await this.authService.login(
-      loginDto.email,
-      loginDto.password,
-    );
+    try {
+      const { id, accessToken, refreshToken } = await this.authService.login(
+        loginDto.email,
+        loginDto.password,
+      );
 
-    res.cookie('refreshToken', refreshToken, this.getRefreshCookieOptions());
-    return { id, accessToken };
+      res.cookie('refreshToken', refreshToken, this.getRefreshCookieOptions());
+      return { id, accessToken };
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Login failed',
+      );
+    }
+  }
+
+  @Post('register')
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      const { id, accessToken, refreshToken } =
+        await this.authService.register(registerDto);
+
+      res.cookie('refreshToken', refreshToken, this.getRefreshCookieOptions());
+      return { id, accessToken };
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'User registration failed',
+      );
+    }
   }
 
   @UseGuards(JwtAuthGuard)
