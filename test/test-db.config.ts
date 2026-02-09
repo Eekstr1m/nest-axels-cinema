@@ -8,7 +8,7 @@ import { Bookings } from 'src/booking/entity/bookings.entity';
 import { BookingSeat } from 'src/booking/entity/bookings-seat.entity';
 
 export const getTestDatabaseModules = () => [
-  ConfigModule.forRoot({ envFilePath: '.env' }),
+  ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
   MongooseModule.forRoot(process.env.MONGO_URI_TEST || ''),
   TypeOrmModule.forRoot({
     type: 'mysql',

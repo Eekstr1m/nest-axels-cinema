@@ -11,12 +11,12 @@ import {
 } from '@nestjs/common';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { Role } from 'src/auth/enums/role.enum';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { MoviesService } from './movies.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('movies')
 export class MoviesController {
@@ -72,7 +72,7 @@ export class MoviesController {
 
   // POST /movies/sql
   @Roles(Role.Admin)
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('sql')
   @HttpCode(HttpStatus.CREATED)
   async createSql(@Body() movie: CreateMovieDto) {
@@ -87,7 +87,7 @@ export class MoviesController {
 
   // POST /movies
   @Roles(Role.Admin)
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() movie: CreateMovieDto) {

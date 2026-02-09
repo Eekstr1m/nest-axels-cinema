@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Get,
   Post,
   Req,
   Request,
@@ -82,23 +81,23 @@ export class AuthController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  getProfile(@Request() { user }: { user: ValidatedJwtUser }) {
-    return user;
-  }
-
   @UseGuards(RefreshJwtAuthGuard)
   @Post('refresh')
   async refreshToken(
     @Req() { user }: { user: ValidatedJwtUser },
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { id, accessToken, refreshToken } =
-      await this.authService.refreshToken(user.userId, user.role);
+    try {
+      const { id, accessToken, refreshToken } =
+        await this.authService.refreshToken(user.userId, user.role);
 
-    res.cookie('refreshToken', refreshToken, this.getRefreshCookieOptions());
-    return { id, accessToken };
+      res.cookie('refreshToken', refreshToken, this.getRefreshCookieOptions());
+      return { id, accessToken };
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Token refresh failed',
+      );
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -107,9 +106,15 @@ export class AuthController {
     @Req() { user }: { user: ValidatedJwtUser },
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.authService.logout(user.userId);
-    res.clearCookie('refreshToken', this.getRefreshCookieOptions());
+    try {
+      await this.authService.logout(user.userId);
+      res.clearCookie('refreshToken', this.getRefreshCookieOptions());
 
-    return { message: 'Logged out successfully' };
+      return { message: 'Logged out successfully' };
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Logout failed',
+      );
+    }
   }
 }

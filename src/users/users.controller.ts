@@ -18,14 +18,26 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Req() { user }: { user: ValidatedJwtUser }) {
-    return this.usersService.findOneById(user.userId);
+  async getProfile(@Req() { user }: { user: ValidatedJwtUser }) {
+    try {
+      return await this.usersService.findOneById(user.userId);
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'User not found',
+      );
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('auth-user')
-  getUserInfoById(@Req() { user }: { user: ValidatedJwtUser }) {
-    return this.usersService.getUserInfoById(user.userId);
+  async getUserInfoById(@Req() { user }: { user: ValidatedJwtUser }) {
+    try {
+      return await this.usersService.getUserInfoById(user.userId);
+    } catch (error) {
+      throw new NotFoundException(
+        error instanceof Error ? error.message : 'User not found',
+      );
+    }
   }
 
   @UseGuards(JwtAuthGuard)

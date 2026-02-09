@@ -6,6 +6,8 @@ import { MoviesService } from '../movies.service';
 import { MovieDocument } from '../schema/movies.schema';
 import { Movies } from '../entity/movie.entity';
 import { CreateMovieDto } from '../dto/create-movie.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/roles/roles.guard';
 
 const mockMovieMongo = {
   _id: new mongoose.Types.ObjectId(),
@@ -53,7 +55,7 @@ describe('MoviesController', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleBuilder = Test.createTestingModule({
       controllers: [MoviesController],
       providers: [
         {
@@ -61,7 +63,13 @@ describe('MoviesController', () => {
           useValue: mockMovieService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) });
+
+    const module: TestingModule = await moduleBuilder.compile();
 
     controller = module.get<MoviesController>(MoviesController);
     service = module.get<MoviesService>(MoviesService);

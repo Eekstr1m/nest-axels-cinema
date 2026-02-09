@@ -17,6 +17,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BookingSeat } from '../entity/bookings-seat.entity';
 import { Seat } from 'src/sessions/entity/seat.entity';
+import { Session } from 'src/sessions/entity/session.entity';
 
 const mockSessionId = new mongoose.Types.ObjectId();
 const mockMovieId = new mongoose.Types.ObjectId();
@@ -42,10 +43,8 @@ const mockBooking = {
   movieId: mockMovieId.toString(),
   date: '2026-02-15',
   bookedSeats: [
-    [
-      { row: 1, number: 1, isBooked: true },
-      { row: 1, number: 2, isBooked: true },
-    ],
+    { row: 1, number: 1, isBooked: true },
+    { row: 1, number: 2, isBooked: true },
   ],
   time: '18:00',
   pricePerSeat: 250,
@@ -77,10 +76,8 @@ const mockCreateBookingDto = {
   movieId: mockMovieId,
   date: '2026-02-15',
   bookedSeats: [
-    [
-      { row: 1, number: 1, isBooked: true },
-      { row: 1, number: 2, isBooked: true },
-    ],
+    { row: 1, number: 1, isBooked: true },
+    { row: 1, number: 2, isBooked: true },
   ],
   time: '18:00',
   pricePerSeat: 250,
@@ -128,6 +125,9 @@ describe('BookingService', () => {
   let seatRepository: {
     findOne: jest.Mock;
   };
+  let sessionsRepository: {
+    findOne: jest.Mock;
+  };
   let dataSource: jest.Mocked<DataSource>;
 
   beforeEach(async () => {
@@ -164,6 +164,15 @@ describe('BookingService', () => {
 
     seatRepository = {
       findOne: jest.fn().mockResolvedValue(mockSeat),
+    };
+
+    sessionsRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        _id: mockCreateBookingSqlDto.sessionId,
+        date: mockCreateBookingSqlDto.date,
+        startTime: mockCreateBookingSqlDto.time,
+        movie: { _id: mockCreateBookingSqlDto.movieId },
+      }),
     };
 
     const mockQueryRunner = {
@@ -203,6 +212,10 @@ describe('BookingService', () => {
         {
           provide: getRepositoryToken(Seat),
           useValue: seatRepository,
+        },
+        {
+          provide: getRepositoryToken(Session),
+          useValue: sessionsRepository,
         },
         {
           provide: DataSource,

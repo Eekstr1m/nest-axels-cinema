@@ -12,6 +12,9 @@ import { SessionsModule } from 'src/sessions/sessions.module';
 import { MoviesModule } from 'src/movies/movies.module';
 import { Sessions } from 'src/sessions/schema/sessions.schema';
 import { Movie } from 'src/movies/schema/movies.schema';
+import { User } from 'src/users/schema/user.schema';
+import { UsersModule } from 'src/users/users.module';
+import { Role } from 'src/auth/enums/role.enum';
 
 describe('BookingController (e2e)', () => {
   let app: INestApplication<App>;
@@ -19,6 +22,8 @@ describe('BookingController (e2e)', () => {
   let bookingModel: Model<Booking>;
   let sessionsModel: Model<Sessions>;
   let movieModel: Model<Movie>;
+  let userModel: Model<User>;
+  let accessToken: string;
   let createdMovieId: string;
   let createdSessionId: string;
   let createdSessionDate: string;
@@ -46,12 +51,21 @@ describe('BookingController (e2e)', () => {
     phone: '+1234567890',
   };
 
+  const adminUser = {
+    email: 'movies.admin@example.com',
+    password: 'Password123!',
+    fullName: 'Movies Admin',
+    phone: '+380123456789',
+    role: Role.Admin,
+  };
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         BookingModule,
         SessionsModule,
         MoviesModule,
+        UsersModule,
         ...getTestDatabaseModules(),
       ],
     }).compile();
@@ -68,16 +82,34 @@ describe('BookingController (e2e)', () => {
       getModelToken(Sessions.name),
     );
     movieModel = moduleFixture.get<Model<Movie>>(getModelToken(Movie.name));
+    userModel = moduleFixture.get<Model<User>>(getModelToken(User.name));
 
     await bookingModel.deleteMany({});
     await sessionsModel.deleteMany({});
     await movieModel.deleteMany({});
+    await userModel.deleteMany({});
 
     await dataSource.query('DELETE FROM booking_seat');
     await dataSource.query('DELETE FROM bookings');
     await dataSource.query('DELETE FROM seat');
     await dataSource.query('DELETE FROM session');
     await dataSource.query('DELETE FROM movies');
+
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(adminUser)
+      .expect(201);
+
+    await userModel
+      .findOneAndUpdate({ email: adminUser.email }, { role: Role.Admin })
+      .exec();
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: adminUser.email, password: adminUser.password })
+      .expect(201);
+
+    accessToken = loginResponse.body.accessToken as string;
   });
 
   afterAll(async () => {
@@ -90,6 +122,7 @@ describe('BookingController (e2e)', () => {
         if (!createdMovieId) {
           const createdMovieResponse = await request(app.getHttpServer())
             .post('/movies')
+            .set('Authorization', `Bearer ${accessToken}`)
             .send(movieData)
             .expect(201);
 
@@ -267,6 +300,7 @@ describe('BookingController (e2e)', () => {
         if (!createdSqlMovieId) {
           const createMovieResponse = await request(app.getHttpServer())
             .post('/movies/sql')
+            .set('Authorization', `Bearer ${accessToken}`)
             .send(movieData)
             .expect(201);
 

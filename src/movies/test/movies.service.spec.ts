@@ -63,6 +63,7 @@ describe('MoviesService', () => {
     movieModel = {
       find: jest.fn(),
       findById: jest.fn(),
+      findOne: jest.fn(),
       constructor: jest.fn().mockReturnValue(mockMovieModelInstance),
     } as unknown as jest.Mocked<mongoose.Model<Movie>>;
 
@@ -188,9 +189,12 @@ describe('MoviesService', () => {
         save: mockSave,
       };
 
-      const movieModelConstructor = jest
-        .fn()
-        .mockReturnValue(mockMovieInstance);
+      const movieModelConstructor = Object.assign(
+        jest.fn().mockReturnValue(mockMovieInstance),
+        {
+          findOne: jest.fn().mockResolvedValue(null),
+        },
+      );
       service['movieModel'] =
         movieModelConstructor as unknown as mongoose.Model<Movie>;
 

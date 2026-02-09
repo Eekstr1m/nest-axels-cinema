@@ -9,6 +9,9 @@ import { DataSource } from 'typeorm';
 import { getModelToken } from '@nestjs/mongoose';
 import { Movie } from 'src/movies/schema/movies.schema';
 import { Model } from 'mongoose';
+import { Role } from 'src/auth/enums/role.enum';
+import { User } from 'src/users/schema/user.schema';
+import { UsersModule } from 'src/users/users.module';
 
 const movieData = {
   title: 'Sessions Test Movie',
@@ -19,10 +22,20 @@ const movieData = {
   releaseDate: '2026-01-01',
 };
 
+const adminUser = {
+  email: 'movies.admin@example.com',
+  password: 'Password123!',
+  fullName: 'Movies Admin',
+  phone: '+380123456789',
+  role: Role.Admin,
+};
+
 describe('SessionsController (e2e)', () => {
   let app: INestApplication<App>;
   let dataSource: DataSource;
   let movieModel: Model<Movie>;
+  let userModel: Model<User>;
+  let accessToken: string;
   let createdMovieId: string;
   let createdSqlMovieId: number;
   let createdSessionId: string;
@@ -32,7 +45,12 @@ describe('SessionsController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [SessionsModule, MoviesModule, ...getTestDatabaseModules()],
+      imports: [
+        SessionsModule,
+        MoviesModule,
+        UsersModule,
+        ...getTestDatabaseModules(),
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -41,6 +59,25 @@ describe('SessionsController (e2e)', () => {
 
     dataSource = moduleFixture.get<DataSource>(DataSource);
     movieModel = moduleFixture.get<Model<Movie>>(getModelToken(Movie.name));
+    userModel = moduleFixture.get<Model<User>>(getModelToken(User.name));
+
+    await userModel.deleteMany({});
+
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(adminUser)
+      .expect(201);
+
+    await userModel
+      .findOneAndUpdate({ email: adminUser.email }, { role: Role.Admin })
+      .exec();
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: adminUser.email, password: adminUser.password })
+      .expect(201);
+
+    accessToken = loginResponse.body.accessToken as string;
   });
 
   afterAll(async () => {
@@ -65,6 +102,7 @@ describe('SessionsController (e2e)', () => {
         if (!createdMovieId) {
           const createMovieResponse = await request(app.getHttpServer())
             .post('/movies')
+            .set('Authorization', `Bearer ${accessToken}`)
             .send(movieData)
             .expect(201);
 
@@ -244,6 +282,7 @@ describe('SessionsController (e2e)', () => {
         if (!createdSqlMovieId) {
           const createMovieResponse = await request(app.getHttpServer())
             .post('/movies/sql')
+            .set('Authorization', `Bearer ${accessToken}`)
             .send(movieData)
             .expect(201);
 

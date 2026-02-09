@@ -479,7 +479,7 @@ describe('SessionsService', () => {
       moviesRepository.find.mockResolvedValue([]);
 
       await expect(service.generateSessionsSql()).rejects.toThrow(
-        'Error generating sessions',
+        'No movies found in database',
       );
     });
 
@@ -488,7 +488,7 @@ describe('SessionsService', () => {
       const queryRunner = dataSource.createQueryRunner();
 
       await expect(service.generateSessionsSql()).rejects.toThrow(
-        'Error generating sessions',
+        'Database error',
       );
 
       expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
