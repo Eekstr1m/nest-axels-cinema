@@ -86,15 +86,10 @@ describe('MoviesController', () => {
     });
 
     it('should throw NotFoundException on error', async () => {
-      try {
-        await controller.findAll();
-        mockMovieService.findAll.mockRejectedValue(
-          new Error('Movies not found'),
-        );
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('Movies not found');
-      }
+      mockMovieService.findAll.mockRejectedValue(new Error('Movies not found'));
+
+      await expect(controller.findAll()).rejects.toThrow(NotFoundException);
+      await expect(controller.findAll()).rejects.toThrow('Movies not found');
     });
   });
 
@@ -106,15 +101,12 @@ describe('MoviesController', () => {
     });
 
     it('should throw NotFoundException on error', async () => {
-      try {
-        await controller.findAllSql();
-        mockMovieService.findAllSql.mockRejectedValue(
-          new Error('Movies not found'),
-        );
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('Movies not found');
-      }
+      mockMovieService.findAllSql.mockRejectedValue(
+        new Error('Movies not found'),
+      );
+
+      await expect(controller.findAllSql()).rejects.toThrow(NotFoundException);
+      await expect(controller.findAllSql()).rejects.toThrow('Movies not found');
     });
   });
 
@@ -127,15 +119,14 @@ describe('MoviesController', () => {
     });
 
     it('should throw NotFoundException on error', async () => {
-      try {
-        await controller.findOne(mockMovieMongo._id);
-        mockMovieService.findOne.mockRejectedValue(
-          new Error('Movie not found'),
-        );
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('Movie not found');
-      }
+      mockMovieService.findOne.mockRejectedValue(new Error('Movie not found'));
+
+      await expect(controller.findOne(mockMovieMongo._id)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(controller.findOne(mockMovieMongo._id)).rejects.toThrow(
+        'Movie not found',
+      );
     });
   });
 
@@ -147,15 +138,16 @@ describe('MoviesController', () => {
     });
 
     it('should throw NotFoundException on error', async () => {
-      try {
-        await controller.findOneSql(mockMovieSql._id);
-        mockMovieService.findOneSql.mockRejectedValue(
-          new Error('Movie not found'),
-        );
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('Movie not found');
-      }
+      mockMovieService.findOneSql.mockRejectedValue(
+        new Error('Movie not found'),
+      );
+
+      await expect(controller.findOneSql(mockMovieSql._id)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(controller.findOneSql(mockMovieSql._id)).rejects.toThrow(
+        'Movie not found',
+      );
     });
   });
 
@@ -168,15 +160,16 @@ describe('MoviesController', () => {
     });
 
     it('should throw NotFoundException on error', async () => {
-      try {
-        await controller.create(mockCreateMovieDto);
-        mockMovieService.create.mockRejectedValue(
-          new Error('Invalid movie data'),
-        );
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('Invalid movie data');
-      }
+      mockMovieService.create.mockRejectedValue(
+        new Error('Invalid movie data'),
+      );
+
+      await expect(controller.create(mockCreateMovieDto)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(controller.create(mockCreateMovieDto)).rejects.toThrow(
+        'Invalid movie data',
+      );
     });
   });
 
@@ -188,15 +181,16 @@ describe('MoviesController', () => {
     });
 
     it('should throw NotFoundException on error', async () => {
-      try {
-        await controller.createSql(mockCreateMovieDto);
-        mockMovieService.createSql.mockRejectedValue(
-          new Error('Invalid movie data'),
-        );
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('Invalid movie data');
-      }
+      mockMovieService.createSql.mockRejectedValue(
+        new Error('Invalid movie data'),
+      );
+
+      await expect(controller.createSql(mockCreateMovieDto)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(controller.createSql(mockCreateMovieDto)).rejects.toThrow(
+        'Invalid movie data',
+      );
     });
   });
 });

@@ -299,6 +299,46 @@ describe('BookingService', () => {
         'Seat row 1, number 1 not found',
       );
     });
+
+    it('should throw error when session movie does not match', async () => {
+      const differentMovieId = new mongoose.Types.ObjectId();
+      const sessionWithWrongMovie = {
+        ...mockSession,
+        movieId: differentMovieId,
+        save: jest.fn().mockResolvedValue(true),
+      };
+      sessionsModel.findById.mockResolvedValue(sessionWithWrongMovie as any);
+
+      await expect(service.create(mockCreateBookingDto)).rejects.toThrow(
+        'Session movie does not match booking movie',
+      );
+    });
+
+    it('should throw error when session date does not match', async () => {
+      const sessionWithWrongDate = {
+        ...mockSession,
+        date: '2025-01-01',
+        save: jest.fn().mockResolvedValue(true),
+      };
+      sessionsModel.findById.mockResolvedValue(sessionWithWrongDate as any);
+
+      await expect(service.create(mockCreateBookingDto)).rejects.toThrow(
+        'Session date does not match booking date',
+      );
+    });
+
+    it('should throw error when session time does not match', async () => {
+      const sessionWithWrongTime = {
+        ...mockSession,
+        startTime: '20:00',
+        save: jest.fn().mockResolvedValue(true),
+      };
+      sessionsModel.findById.mockResolvedValue(sessionWithWrongTime as any);
+
+      await expect(service.create(mockCreateBookingDto)).rejects.toThrow(
+        'Session time does not match booking time',
+      );
+    });
   });
 
   describe('createSql', () => {
@@ -353,6 +393,53 @@ describe('BookingService', () => {
 
       expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
       expect(queryRunner.release).toHaveBeenCalled();
+    });
+
+    it('should throw error when session not found in SQL', async () => {
+      sessionsRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.createSql(mockCreateBookingSqlDto)).rejects.toThrow(
+        'Session not found',
+      );
+    });
+
+    it('should throw error when session movie does not match in SQL', async () => {
+      sessionsRepository.findOne.mockResolvedValue({
+        _id: mockCreateBookingSqlDto.sessionId,
+        date: mockCreateBookingSqlDto.date,
+        startTime: mockCreateBookingSqlDto.time,
+        movie: { _id: 999 },
+      });
+
+      await expect(service.createSql(mockCreateBookingSqlDto)).rejects.toThrow(
+        'Session movie does not match booking movie',
+      );
+    });
+
+    it('should throw error when session date does not match in SQL', async () => {
+      sessionsRepository.findOne.mockResolvedValue({
+        _id: mockCreateBookingSqlDto.sessionId,
+        date: '2025-01-01',
+        startTime: mockCreateBookingSqlDto.time,
+        movie: { _id: mockCreateBookingSqlDto.movieId },
+      });
+
+      await expect(service.createSql(mockCreateBookingSqlDto)).rejects.toThrow(
+        'Session date does not match booking date',
+      );
+    });
+
+    it('should throw error when session time does not match in SQL', async () => {
+      sessionsRepository.findOne.mockResolvedValue({
+        _id: mockCreateBookingSqlDto.sessionId,
+        date: mockCreateBookingSqlDto.date,
+        startTime: '20:00',
+        movie: { _id: mockCreateBookingSqlDto.movieId },
+      });
+
+      await expect(service.createSql(mockCreateBookingSqlDto)).rejects.toThrow(
+        'Session time does not match booking time',
+      );
     });
   });
 });
