@@ -43,6 +43,13 @@ export class Booking {
 
   @Prop({ required: true })
   phone!: string;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false,
+  })
+  userId?: string;
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

@@ -48,6 +48,9 @@ export class Bookings {
   @Column({ length: 50 })
   phone: string;
 
+  @Column({ name: 'user_id', length: 255, nullable: true })
+  userId?: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

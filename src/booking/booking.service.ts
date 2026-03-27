@@ -13,12 +13,15 @@ import { Seat } from 'src/sessions/entity/seat.entity';
 import { Session } from 'src/sessions/entity/session.entity';
 import { DataSource, Repository } from 'typeorm';
 import { Sessions } from 'src/sessions/schema/sessions.schema';
+import { User } from 'src/users/schema/user.schema';
+import { Role } from 'src/auth/enums/role.enum';
 
 @Injectable()
 export class BookingService {
   constructor(
     @InjectModel(Booking.name) private bookingModel: Model<Booking>,
     @InjectModel(Sessions.name) private sessionsModel: Model<Sessions>,
+    @InjectModel(User.name) private userModel: Model<User>,
 
     @InjectRepository(Bookings) private bookingRepository: Repository<Bookings>,
     @InjectRepository(BookingSeat)
@@ -85,7 +88,44 @@ export class BookingService {
     const newBooking = new this.bookingModel(bookingData);
     await newBooking.save();
 
-    return newBooking;
+    let userResult: User | null = null;
+
+    try {
+      const existingUser = await this.userModel.findOne({
+        email: bookingData.email,
+      });
+
+      if (!existingUser) {
+        let desiredFullName = bookingData.fullName || 'Guest';
+        const nameTaken = await this.userModel.findOne({
+          fullName: desiredFullName,
+        });
+        if (nameTaken) {
+          desiredFullName = `${desiredFullName}-${Math.random()
+            .toString(36)
+            .substring(2, 8)}`;
+        }
+
+        const newUser = new this.userModel({
+          fullName: desiredFullName,
+          email: bookingData.email,
+          phone: bookingData.phone,
+          role: Role.Guest,
+        });
+
+        const savedUser = await newUser.save();
+        userResult = savedUser;
+
+        (newBooking as any).userId = savedUser._id;
+        await newBooking.save();
+      } else {
+        userResult = existingUser;
+      }
+    } catch (err) {
+      console.error('Failed to create guest user:', err);
+    }
+
+    return { booking: newBooking, user: userResult };
   }
 
   async createSql(bookingData: CreateBookingSqlDto) {
@@ -166,7 +206,55 @@ export class BookingService {
 
       await queryRunner.commitTransaction();
 
-      return savedBooking;
+      let userResult: User | null = null;
+      try {
+        const existingUser = await this.userModel.findOne({
+          email: bookingData.email,
+        });
+        if (!existingUser) {
+          let desiredFullName = bookingData.fullName || 'Guest';
+          const nameTaken = await this.userModel.findOne({
+            fullName: desiredFullName,
+          });
+          if (nameTaken) {
+            desiredFullName = `${desiredFullName}-${Math.random()
+              .toString(36)
+              .substring(2, 8)}`;
+          }
+
+          const newUser = new this.userModel({
+            fullName: desiredFullName,
+            email: bookingData.email,
+            phone: bookingData.phone,
+            role: Role.Guest,
+          });
+
+          const savedUser = await newUser.save();
+          userResult = savedUser;
+
+          const userId = savedUser._id ? savedUser._id.toString() : undefined;
+          if (userId) {
+            try {
+              await this.bookingRepository.update(savedBooking.id, {
+                userId,
+              });
+            } catch (e) {
+              console.error(
+                `Failed to update booking with userId ${userId}:`,
+                e,
+              );
+            }
+
+            (savedBooking as any).userId = userId;
+          }
+        } else {
+          userResult = existingUser;
+        }
+      } catch (err) {
+        console.error('Failed to create guest user for SQL booking:', err);
+      }
+
+      return { booking: savedBooking, user: userResult };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
